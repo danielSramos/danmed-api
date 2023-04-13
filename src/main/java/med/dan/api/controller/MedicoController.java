@@ -1,10 +1,7 @@
 package med.dan.api.controller;
 
 import jakarta.validation.Valid;
-import med.dan.api.medico.DadosCadastroMedico;
-import med.dan.api.medico.DadosListagemMedico;
-import med.dan.api.medico.Medico;
-import med.dan.api.medico.MedicoRepository;
+import med.dan.api.medico.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -20,14 +17,32 @@ public class MedicoController {
     private MedicoRepository repository;
 
     @GetMapping
-    public ResponseEntity listar(@PageableDefault(size = 5, page = 0, sort = {"nome"}) Pageable pagination) {
-        return ResponseEntity.ok(repository.findAll(pagination).map(DadosListagemMedico::new));
+    public ResponseEntity listar(@PageableDefault(size = 3, page = 0, sort = {"nome"}) Pageable pagination) {
+
+        return ResponseEntity.ok(repository.findAllByAtivoTrue(pagination).map(DadosListagemMedico::new));
     }
 
     @PostMapping
     @Transactional
     public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados) {
         return  ResponseEntity.ok(repository.save(new Medico(dados)));
+    }
+
+    @PutMapping
+    @Transactional
+    public ResponseEntity atualizar(@RequestBody @Valid DadosAtualizaMedico dados) {
+
+        Medico medico = repository.getReferenceById(dados.id());
+        medico.atualizarInformacoes(dados);
+        return ResponseEntity.ok("atualizado");
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public  ResponseEntity excluir(@PathVariable Long id) {
+        var medico = repository.getReferenceById(id);
+        medico.excluir();
+        return ResponseEntity.ok("medico excluido");
     }
 
 }
